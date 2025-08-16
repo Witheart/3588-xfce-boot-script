@@ -1,0 +1,129 @@
+#!/bin/bash
+#
+# 开机脚本
+
+echo "======[witheart] /etc/rc.local 开机脚本开始执行======" > /dev/kmsg
+
+# 打印所有调试信息======
+sudo echo 7 > /proc/sys/kernel/printk
+
+
+# 配置开启蓝牙======
+echo "[witheart] 初始化蓝牙..." > /dev/kmsg
+
+systemctl stop bluetooth
+ifconfig wlan0 > /dev/null
+if [[ $? -eq 0 ]];then
+        brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /system/etc/firmware/BCM4343A1.hcd  /dev/ttyS6 &
+fi
+sleep 1
+systemctl start bluetooth
+
+echo "[witheart] 初始化蓝牙结束" > /dev/kmsg
+
+
+# 4G 拨号======
+echo "[witheart] 初始化4G拨号..." > /dev/kmsg
+
+# 获取Quectel模块的PID
+pid=$(lsusb | grep "2c7c:" | awk -F: '{print $3}' | cut -c 1-4)
+
+# 根据PID选择拨号命令
+case "$pid" in
+    "0125")
+        echo "[witheart] 检测到EC20模块(PID:0125)" > /dev/kmsg
+        echo -e "AT+QCFG=\"usbnet\",1\r\n" > /dev/ttyUSB2
+	echo -e "AT+CFUN=1,1\r\n" > /dev/ttyUSB2
+        sleep 2
+        ;;
+    "0901")
+        echo "[witheart] 检测到EC200U模块(PID:0901)" > /dev/kmsg
+        echo -e "AT+QCFG=\"usbnet\",1\r\n" > /dev/ttyUSB0
+        sleep 2
+        echo -e "AT+qnetdevctl=1,1,1\r\n" > /dev/ttyUSB0
+        sleep 2
+        ;;
+    "")
+        echo "[witheart] 错误：未检测到Quectel模块" > /dev/kmsg
+        ;;
+    *)
+        echo "[witheart] 检测到未知模块(PID:$pid)" > /dev/kmsg
+        echo -e "AT+QCFG=\"usbnet\",1\r\n" > /dev/ttyUSB0
+        sleep 2
+        echo -e "AT+qnetdevctl=1,1,1\r\n" > /dev/ttyUSB0
+        sleep 2
+        ;;
+esac
+
+ifconfig usb0 up
+sleep 1
+udhcpc -i usb0
+sleep 1
+
+echo "[witheart] 初始化4G拨号结束" > /dev/kmsg
+
+# gpio======
+echo "[witheart] 初始化GPIO..." > /dev/kmsg
+
+echo 40 >/sys/class/gpio/export
+echo 95 >/sys/class/gpio/export
+echo 148 >/sys/class/gpio/export
+echo 36 >/sys/class/gpio/export
+echo 154 >/sys/class/gpio/export
+echo 41 >/sys/class/gpio/export
+echo 42 >/sys/class/gpio/export
+echo 96 >/sys/class/gpio/export
+
+echo in >/sys/class/gpio/gpio40/direction
+echo in >/sys/class/gpio/gpio95/direction
+echo in >/sys/class/gpio/gpio148/direction
+echo in >/sys/class/gpio/gpio36/direction
+
+echo out>/sys/class/gpio/gpio154/direction
+echo out>/sys/class/gpio/gpio41/direction
+echo out>/sys/class/gpio/gpio42/direction
+echo out>/sys/class/gpio/gpio96/direction
+
+echo "[witheart] 初始化GPIO结束" > /dev/kmsg
+
+# 烧录完成后首次开机执行======
+MARKER_FILE="/etc/firstboot_done"
+
+if [ ! -f "$MARKER_FILE" ]; then
+    echo "[witheart] 首次开机：执行初始化操作..." > /dev/kmsg
+    # 放置首次开机的初始化命令（如创建用户、安装软件等）
+    sudo touch "$MARKER_FILE"  # 创建标记文件
+
+    # 重置machine-id
+    rm -f /etc/machine-id
+    rm -f /var/lib/dbus/machine-id
+    systemd-machine-id-setup
+    echo "[witheart] Generate the new machine-id: $(cat /etc/machine-id)" > /dev/kmsg
+
+else
+    echo "[witheart] 非首次开机" > /dev/kmsg
+fi
+
+# resize rootfs======
+echo "[witheart] 开始调整根文件系统大小..." > /dev/kmsg
+/usr/local/bin/resize-rootfs.sh
+echo "[witheart] 调整根文件系统大小结束" > /dev/kmsg
+
+# 加载声音配置======
+load_sound_config() {
+    echo "[witheart] 加载声音配置..." > /dev/kmsg
+    if [ -f /var/lib/alsa/asound.state ]; then
+        echo "[witheart] /var/lib/alsa/asound.state 存在，加载"> /dev/kmsg
+        alsactl restore -f /var/lib/alsa/asound.state
+    else
+        echo "[witheart] asound.state 不存在，跳过加载" > /dev/kmsg
+    fi
+    echo "[witheart] 声音配置加载完成" > /dev/kmsg
+}
+
+# 创建后台子进程实现非阻塞延时
+( sleep 10; load_sound_config ) &
+
+echo "[witheart] ======/etc/rc.local 开机脚本执行完毕======" > /dev/kmsg
+
+exit 0
