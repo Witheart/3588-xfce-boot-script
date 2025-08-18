@@ -2,7 +2,7 @@
 #
 # 开机脚本
 
-echo "======[witheart] /etc/rc.local 开机脚本开始执行======" > /dev/kmsg
+echo "[witheart] ======/etc/rc.local 开机脚本开始执行======" > /dev/kmsg
 
 # 打印所有调试信息======
 sudo echo 7 > /proc/sys/kernel/printk
@@ -121,7 +121,7 @@ load_sound_config() {
     echo "[witheart] 声音配置加载完成" > /dev/kmsg
 }
 
-# 创建后台子进程实现非阻塞延时
+# 延迟10s加载声音配置
 ( sleep 10; load_sound_config ) &
 
 echo "[witheart] ======/etc/rc.local 开机脚本执行完毕======" > /dev/kmsg
