@@ -14,7 +14,7 @@ echo "[witheart] 初始化蓝牙..." > /dev/kmsg
 systemctl stop bluetooth
 ifconfig wlan0 > /dev/null
 if [[ $? -eq 0 ]];then
-        brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /system/etc/firmware/BCM4343A1.hcd  /dev/ttyS6 &
+        brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /system/etc/firmware/BCM4343A1.hcd  /dev/ttyS9 &
 fi
 sleep 1
 systemctl start bluetooth
