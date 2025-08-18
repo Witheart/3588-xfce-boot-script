@@ -47,11 +47,7 @@ case "$pid" in
         echo "[witheart] 错误：未检测到Quectel模块" > /dev/kmsg
         ;;
     *)
-        echo "[witheart] 检测到未知模块(PID:$pid)" > /dev/kmsg
-        echo -e "AT+QCFG=\"usbnet\",1\r\n" > /dev/ttyUSB0
-        sleep 2
-        echo -e "AT+qnetdevctl=1,1,1\r\n" > /dev/ttyUSB0
-        sleep 2
+        echo "[witheart] 检测到未知的 Quectel 移动网络模块(PID:$pid)" > /dev/kmsg
         ;;
 esac
 
