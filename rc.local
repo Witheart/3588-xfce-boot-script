@@ -7,6 +7,13 @@ echo "[witheart] ======/etc/rc.local 开机脚本开始执行======" > /dev/kmsg
 # 打印所有调试信息======
 sudo echo 7 > /proc/sys/kernel/printk
 
+# 配置开启WiFi======
+echo "[witheart] 初始化WiFi..." > /dev/kmsg
+
+/usr/local/bin/setup_wifi_firmware.sh
+insmod /root/dhd-cyw43430.ko
+
+echo "[witheart] 初始化WiFi结束" > /dev/kmsg
 
 # 配置开启蓝牙======
 init_bt(){
