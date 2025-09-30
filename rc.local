@@ -115,13 +115,14 @@ echo "[witheart] 调整根文件系统大小结束" > /dev/kmsg
 
 
 # 加载声音配置======
+ASOUND_STATE_FILE="/root/asound.state"
 load_sound_config() {
     echo "[witheart] 加载声音配置..." > /dev/kmsg
-    if [ -f /var/lib/alsa/asound.state ]; then
-        echo "[witheart] /var/lib/alsa/asound.state 存在，加载"> /dev/kmsg
-        alsactl restore -f /var/lib/alsa/asound.state
+    if [ -f "${ASOUND_STATE_FILE}" ]; then
+        echo "[witheart] ${ASOUND_STATE_FILE} 存在，正在加载" > /dev/kmsg
+        alsactl restore -f "${ASOUND_STATE_FILE}"
     else
-        echo "[witheart] asound.state 不存在，跳过加载" > /dev/kmsg
+        echo "[witheart] 配置文件不存在，跳过加载" > /dev/kmsg
     fi
     echo "[witheart] 声音配置加载完成" > /dev/kmsg
 }
