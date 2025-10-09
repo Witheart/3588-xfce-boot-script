@@ -15,23 +15,49 @@ insmod /root/dhd-cyw43430.ko
 
 echo "[witheart] 初始化WiFi结束" > /dev/kmsg
 
+
 # 配置开启蓝牙======
 init_bt(){
     echo "[witheart] 初始化蓝牙..." > /dev/kmsg
 
     systemctl stop bluetooth
+    
+    # 检查wlan0是否存在
     ifconfig wlan0 > /dev/null
-    if [[ $? -eq 0 ]];then
-        echo "[witheart] 开始下载蓝牙固件..." > /dev/kmsg
-        brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download --tosleep 200000 --baudrate 1500000 --patchram /root/BCM43455_cm256.hcd  /dev/ttyS9 &
+    if [[ $? -eq 0 ]]; then
+        # 检查WiFi模块标识文件
+        if [[ -f "/tmp/wifi_module" ]]; then
+            wifi_module=$(cat /tmp/wifi_module)
+            case $wifi_module in
+                nm372)
+                    echo "[witheart] 检测到nm372模块，加载BCM43430固件" > /dev/kmsg
+                    brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download \
+                        --tosleep 200000 --baudrate 1500000 \
+                        --patchram /root/BCM43430_nm372.hcd /dev/ttyS9 &
+                    ;;
+                cm256)
+                    echo "[witheart] 检测到cm256模块，加载BCM43455固件" > /dev/kmsg
+                    brcm_patchram_plus1 --enable_hci --no2bytes --use_baudrate_for_download \
+                        --tosleep 200000 --baudrate 1500000 \
+                        --patchram /root/BCM43455_cm256.hcd /dev/ttyS9 &
+                    ;;
+                *)
+                    echo "[witheart] 未知WiFi模块: $wifi_module，不加载蓝牙固件" > /dev/kmsg
+                    ;;
+            esac
+        else
+            echo "[witheart] 未找到WiFi模块标识文件，不加载蓝牙固件" > /dev/kmsg
+        fi
     else
         echo "[witheart] wlan0 未启动，不下载蓝牙固件" > /dev/kmsg
     fi
+    
     sleep 1
     systemctl start bluetooth
 
     echo "[witheart] 初始化蓝牙结束" > /dev/kmsg
 }
+
 # 延迟10s执行蓝牙固件初始化
 ( sleep 10; init_bt ) &
 
