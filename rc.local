@@ -7,16 +7,16 @@ echo "[witheart] ======/etc/rc.local 开机脚本开始执行======" > /dev/kmsg
 # 打印所有调试信息======
 sudo echo 7 > /proc/sys/kernel/printk
 
-# 配置开启WiFi======
-echo "[witheart] 初始化WiFi..." > /dev/kmsg
+# 配置开启WiFi 蓝牙======
+init_wifi(){
+    echo "[witheart] 初始化WiFi..." > /dev/kmsg
 
-/usr/local/bin/setup_wifi_firmware.sh
-insmod /root/dhd-cyw43430.ko -f &
+    /usr/local/bin/setup_wifi_firmware.sh
+    insmod /root/dhd-cyw43430.ko -f
 
-echo "[witheart] 初始化WiFi结束" > /dev/kmsg
+    echo "[witheart] 初始化WiFi结束" > /dev/kmsg
+}
 
-
-# 配置开启蓝牙======
 init_bt(){
     echo "[witheart] 初始化蓝牙..." > /dev/kmsg
 
@@ -58,8 +58,8 @@ init_bt(){
     echo "[witheart] 初始化蓝牙结束" > /dev/kmsg
 }
 
-# 延迟10s执行蓝牙固件初始化
-( sleep 10; init_bt ) &
+# 延迟10s执行WiFi 蓝牙固件初始化
+( sleep 10; init_wifi; init_bt ) &
 
 
 # 4G 拨号======
