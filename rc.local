@@ -212,7 +212,7 @@ load_sound_config() {
     echo "[witheart] 加载声音配置..." > /dev/kmsg
     if [ -f "${ASOUND_STATE_FILE}" ]; then
         echo "[witheart] ${ASOUND_STATE_FILE} 存在，正在加载" > /dev/kmsg
-        alsactl restore -f "${ASOUND_STATE_FILE}"
+        alsactl restore -f "${ASOUND_STATE_FILE}" -U
     else
         echo "[witheart] 配置文件不存在，跳过加载" > /dev/kmsg
     fi
