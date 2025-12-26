@@ -11,8 +11,8 @@ sudo echo 7 > /proc/sys/kernel/printk
 init_wifi(){
     echo "[witheart] 初始化WiFi..." > /dev/kmsg
 
-    /usr/local/bin/setup_wifi_firmware.sh
-    insmod /root/dhd-cyw43430.ko -f
+    insmod /root/brcmutil.ko -f
+    insmod /root/brcmfmac.ko -f
 
     echo "[witheart] 初始化WiFi结束" > /dev/kmsg
 }
