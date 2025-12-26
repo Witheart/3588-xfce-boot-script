@@ -18,7 +18,46 @@ init_wifi(){
 }
 
 init_bt(){
+    # 更换为udev规则加载
+    return 0
     echo "[witheart] 初始化蓝牙..." > /dev/kmsg
+
+    # 标识文件路径
+    ID_FILE="/tmp/wifi_module"
+
+    # 清空旧标识文件
+    > "$ID_FILE"
+
+    # 遍历所有SDIO设备
+    for device in /sys/bus/sdio/devices/*; do
+        # 检查vendor文件是否存在
+        if [[ -f "$device/vendor" ]]; then
+            # 读取VID并去除前缀/后缀
+            vid=$(cat "$device/vendor" | sed -e 's/^0x//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')
+            
+            # 检查VID是否为02d0
+            if [[ "$vid" == "02d0" ]]; then
+                # 读取PID并去除前缀/后缀
+                pid=$(cat "$device/device" | sed -e 's/^0x//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')
+                
+                case $pid in
+                    a9a6)  # 43430
+                        echo "[witheart] Found WiFi module nm372 (43430)" > /dev/kmsg
+                        # 创建标识文件
+                        echo "nm372" > "$ID_FILE"
+                        ;;
+                    a9bf)  # 43455
+                        echo "[witheart] Found WiFi module cm256 (43455)" > /dev/kmsg
+                        # 创建标识文件
+                        echo "cm256" > "$ID_FILE"
+                        ;;
+                    *)
+                        echo "[witheart] Unsupported PID: $pid." > /dev/kmsg
+                        ;;
+                esac
+            fi
+        fi
+    done
 
     systemctl stop bluetooth
     
