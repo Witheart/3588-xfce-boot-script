@@ -224,6 +224,10 @@ load_sound_config() {
 # 延迟10s加载声音配置
 ( sleep 10; load_sound_config ) &
 
+
+# 定制开机脚本======
+( sleep 10; /test/autorun.sh ) &
+
 echo "[witheart] ======/etc/rc.local 开机脚本执行完毕======" > /dev/kmsg
 
 exit 0
