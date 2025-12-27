@@ -195,6 +195,9 @@ if [ ! -f "$MARKER_FILE" ]; then
     systemd-machine-id-setup
     echo "[witheart] Generate the new machine-id: $(cat /etc/machine-id)" > /dev/kmsg
 
+    # 重启systemd-journald
+    echo "[witheart] Restarting systemd-journald to apply new machine-id..." > /dev/kmsg
+    sudo systemctl restart systemd-journald
 else
     echo "[witheart] 非首次开机" > /dev/kmsg
 fi
